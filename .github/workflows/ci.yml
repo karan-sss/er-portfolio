@@ -1,9 +1,9 @@
 name: ci
 
 # Pull-request checks plus Trivy reporting to GitHub code scanning.
-# deploy.yml (main only) still gates releases with its own Trivy scan; this
-# workflow makes the same checks visible on PRs and in the Security tab, and
-# re-scans weekly so new CVEs show up even when nothing changed.
+# Any fixable CRITICAL/HIGH/MEDIUM finding fails the check, unless it is listed
+# (with a reason and an expiry) in .trivyscan.ignore. Both jobs are required
+# checks on main. Re-scans weekly so new CVEs show up even when nothing changed.
 
 on:
   pull_request:
@@ -63,15 +63,16 @@ jobs:
           test "$(docker exec web id -u)" = "101" \
             || { echo "::error::container is not running as uid 101"; exit 1; }
 
-      - name: Trivy image (CRITICAL,HIGH → SARIF)
+      - name: Trivy image report (→ SARIF)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
           image-ref: er-portfolio:ci
           format: sarif
           output: trivy-image.sarif
-          severity: CRITICAL,HIGH
+          severity: CRITICAL,HIGH,MEDIUM
           ignore-unfixed: true
+          trivyignores: .trivyscan.ignore
           exit-code: "0"
 
       - name: Upload image SARIF
@@ -80,14 +81,15 @@ jobs:
           sarif_file: trivy-image.sarif
           category: trivy-image
 
-      - name: Trivy gate (fail on fixable CRITICAL)
+      - name: Trivy image gate (fail on any finding above)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
           image-ref: er-portfolio:ci
           format: table
-          severity: CRITICAL
+          severity: CRITICAL,HIGH,MEDIUM
           ignore-unfixed: true
+          trivyignores: .trivyscan.ignore
           exit-code: "1"
           skip-setup-trivy: true
 
@@ -114,6 +116,7 @@ jobs:
           output: trivy-repo.sarif
           severity: CRITICAL,HIGH,MEDIUM
           ignore-unfixed: true
+          trivyignores: .trivyscan.ignore
           exit-code: "0"
 
       - name: Upload repo SARIF
@@ -121,3 +124,16 @@ jobs:
         with:
           sarif_file: trivy-repo.sarif
           category: trivy-repo
+
+      - name: Trivy repo gate (fail on any finding above)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig,secret
+          format: table
+          severity: CRITICAL,HIGH,MEDIUM
+          ignore-unfixed: true
+          trivyignores: .trivyscan.ignore
+          exit-code: "1"
+          skip-setup-trivy: true
