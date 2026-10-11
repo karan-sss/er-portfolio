@@ -11,3 +11,6 @@
 # IDs can be CVEs (image or npm vulnerabilities) or misconfiguration
 # checks such as DS-0002. An expired entry stops being ignored, so the
 # check fails again until it is fixed or re-justified.
+
+# TEST ONLY (throwaway PR #4): accept zlib to prove the ignore file works
+CVE-2026-85091 exp:2026-11-30
