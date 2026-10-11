@@ -24,7 +24,7 @@ jobs:
   # deploy/compose.yaml does: read-only, no capabilities, no new privileges.
   image:
     name: build, smoke test and scan (linux/arm64)
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-26.04-arm
     permissions:
       contents: read
       security-events: write
@@ -97,7 +97,7 @@ jobs:
   # and committed secrets.
   repo:
     name: trivy repo scan
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       security-events: write
