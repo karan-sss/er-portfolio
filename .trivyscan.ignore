@@ -1,0 +1,13 @@
+# Trivy findings accepted on purpose. Read by every Trivy step in
+# .github/workflows/ci.yml (input: trivyignores).
+#
+# Only add a finding here when it cannot be fixed now (no patched package,
+# false positive, or not reachable in this static site). One ID per line,
+# with a comment saying why, and always an expiry date so it gets reviewed:
+#
+#   # zlib heap overflow; no Alpine fix yet, nginx serves static files only
+#   CVE-2026-00000 exp:2026-12-31
+#
+# IDs can be CVEs (image or npm vulnerabilities) or misconfiguration
+# checks such as DS-0002. An expired entry stops being ignored, so the
+# check fails again until it is fixed or re-justified.
