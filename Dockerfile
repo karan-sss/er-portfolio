@@ -19,8 +19,16 @@ LABEL org.opencontainers.image.title="er-portfolio" \
       org.opencontainers.image.source="https://github.com/karan-sss/er-portfolio" \
       org.opencontainers.image.licenses="MIT"
 
+# Pull Alpine security fixes the pinned base has not shipped yet (zlib
+# CVE-2026-85091 at the time of writing). A no-op once upstream rebuilds.
+USER root
+RUN apk upgrade --no-cache zlib
+
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build --chown=101:101 /app/dist/ /usr/share/nginx/html/
+
+# The base image already runs as nginx (uid 101); stating it lets scanners see it.
+USER 101
 
 EXPOSE 8080
 
