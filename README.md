@@ -2,13 +2,13 @@
 
 Karan's engineering portfolio, live at **https://karan-s.com**.
 
-A static page served by an unprivileged nginx container. It runs on the
+A static page built with Vite + TypeScript and served by an unprivileged nginx container. It runs on the
 self-hosted platform described in [project-infra](https://github.com/karan-sss/project-infra).
 
 ## How it ships
 
 ```
-push to main → build linux/arm64 (native runner) → SBOM + provenance → cosign sign
+push to main → vite build → build linux/arm64 (native runner) → SBOM + provenance → cosign sign
             → Trivy scan → cosign verify → deploy over Tailscale → docker compose up
 ```
 
@@ -17,13 +17,21 @@ All of that is project-infra's reusable workflow
 
 | Path | Purpose |
 |---|---|
-| `site/` | The page (plain HTML/CSS, no build step) |
+| `src/content.ts` | Everything the page says (experience, projects, skills) |
+| `src/render.ts` | Renders the content to static HTML at build time (no JS needed to read the page) |
+| `index.html`, `src/styles.css`, `src/main.ts` | Page shell, styles, theme toggle |
+| `public/` | Copied as-is (favicon, robots.txt, pre-paint theme script) |
 | `nginx.conf` | nginx on port 8080, `/healthz`, no server tokens |
-| `Dockerfile` | `nginx-unprivileged` (uid 101), pinned by digest |
+| `Dockerfile` | Node build stage → `nginx-unprivileged` (uid 101); both pinned by digest |
 | `deploy/compose.yaml` | Runtime policy: read-only, `cap_drop: ALL`, 32 MB, no published ports |
 
 ## Local preview
 
+Needs Node 22.
+
 ```bash
-python3 -m http.server -d site 8000   # http://localhost:8000
+npm ci
+npm run dev       # http://localhost:5173, live reload
+npm run build     # type-check + build into dist/
+npm run preview   # serve dist/ at http://localhost:4173
 ```
