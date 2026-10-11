@@ -1,0 +1,23 @@
+# Deployed to /opt/apps/portfolio by project-infra's reusable-deploy-app.yml.
+# Caddy reaches this container as http://portfolio:8080 over the edge network.
+# Policy: no published ports, no Docker socket, mem_limit set.
+services:
+  web:
+    image: ${IMAGE:?IMAGE is set by the deploy workflow}
+    restart: unless-stopped
+    networks:
+      edge:
+        aliases:
+          - portfolio
+    mem_limit: 32m
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  edge:
+    external: true
