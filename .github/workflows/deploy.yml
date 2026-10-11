@@ -1,0 +1,32 @@
+name: deploy
+
+# Build (linux/arm64), sign, scan and deploy via project-infra's reusable
+# workflow. The reusable workflow is pinned by commit SHA; Renovate bumps it.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - site/**
+      - Dockerfile
+      - nginx.conf
+      - deploy/**
+      - .github/workflows/deploy.yml
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  deploy:
+    uses: karan-sss/project-infra/.github/workflows/reusable-deploy-app.yml@ede78421f461a7c9fbbc5bf1c1c53efbd38ad597 # main
+    with:
+      app_name: portfolio
+    secrets:
+      TS_CI_OAUTH_CLIENT_ID: ${{ secrets.TS_CI_OAUTH_CLIENT_ID }}
+      TS_CI_OAUTH_SECRET: ${{ secrets.TS_CI_OAUTH_SECRET }}
+      DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+    permissions:
+      contents: read
+      packages: write
+      id-token: write

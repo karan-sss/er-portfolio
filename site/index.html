@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Karan · Platform Engineer</title>
+  <meta name="description" content="Karan — platform and DevOps engineer. Infrastructure as code, CI/CD, Linux and self-hosted production systems.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232f6f5e'/><text x='16' y='22' font-size='17' font-family='system-ui' font-weight='700' text-anchor='middle' fill='white'>K</text></svg>">
+  <style>
+    :root {
+      --bg: #f7f7f4; --surface: #ffffff; --text: #1c1f1d; --muted: #5d645f;
+      --line: #e3e5e0; --accent: #2f6f5e; --accent-soft: #e4efeb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121513; --surface: #1a1e1b; --text: #e8ebe8; --muted: #9aa39d;
+        --line: #2a302c; --accent: #7cc4ad; --accent-soft: #1f2d28;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    main { max-width: 720px; margin: 0 auto; padding: 72px 20px 48px; }
+    a { color: var(--accent); text-underline-offset: 3px; }
+    a:hover { text-decoration-thickness: 2px; }
+    header { margin-bottom: 56px; }
+    .eyebrow { color: var(--accent); font-weight: 600; letter-spacing: .02em; margin: 0 0 8px; }
+    h1 { font-size: clamp(2.2rem, 6vw, 3rem); line-height: 1.1; margin: 0 0 16px; letter-spacing: -.02em; }
+    .lead { font-size: 1.15rem; color: var(--muted); margin: 0 0 24px; max-width: 34em; }
+    .links { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn {
+      display: inline-block; padding: 9px 16px; border-radius: 8px; text-decoration: none;
+      border: 1px solid var(--line); background: var(--surface); color: var(--text); font-weight: 500;
+    }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+    section { margin-bottom: 48px; }
+    h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 0 0 16px; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
+    .card h3 { margin: 0 0 6px; font-size: 1.2rem; }
+    .card p { margin: 0 0 14px; color: var(--muted); }
+    ul.facts { margin: 0 0 16px; padding-left: 20px; }
+    ul.facts li { margin-bottom: 6px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .tags li { background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 4px 12px; font-size: .9rem; font-weight: 500; }
+    footer { border-top: 1px solid var(--line); padding-top: 20px; color: var(--muted); font-size: .9rem; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Platform &amp; DevOps engineer</p>
+    <h1>Hi, I'm Karan.</h1>
+    <p class="lead">I build and run production systems end to end: infrastructure as code, Linux, CI/CD, security and observability. I care about systems that are cheap to run, safe to change and easy to reason about.</p>
+    <div class="links">
+      <a class="btn primary" href="https://github.com/karan-sss/project-infra">See the platform</a>
+      <a class="btn" href="https://github.com/karan-sss">GitHub</a>
+    </div>
+  </header>
+
+  <section aria-labelledby="featured">
+    <h2 id="featured">Featured project</h2>
+    <article class="card">
+      <h3>project-infra: a production platform for about €7 a month</h3>
+      <p>The self-hosted platform this site runs on, built from an empty cloud account with everything as code.</p>
+      <ul class="facts">
+        <li>Terraform runs only in GitHub Actions. A plan guard prices every change against Hetzner's live API and blocks accidental server replacement.</li>
+        <li>No public SSH: admin and CI access go over Tailscale, and the origin firewall only accepts traffic from Cloudflare.</li>
+        <li>Images are built natively for ARM64, signed with cosign, scanned with Trivy and verified before deploy.</li>
+        <li>Encrypted restic backups to R2 with an automated monthly restore drill.</li>
+      </ul>
+      <a href="https://github.com/karan-sss/project-infra">Code, ADRs and runbook →</a>
+    </article>
+  </section>
+
+  <section aria-labelledby="stack">
+    <h2 id="stack">Tools I work with</h2>
+    <ul class="tags">
+      <li>Terraform</li><li>Linux</li><li>Docker</li><li>GitHub Actions</li>
+      <li>Cloudflare</li><li>Tailscale</li><li>Caddy</li><li>PostgreSQL</li>
+      <li>Redis</li><li>Grafana</li><li>Sigstore / cosign</li><li>Hetzner Cloud</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="site">
+    <h2 id="site">About this site</h2>
+    <p>This page is a static site in an unprivileged nginx container on a 4&nbsp;GB ARM64 server. A push to <code>main</code> builds it in GitHub Actions, signs it, and deploys it over the tailnet, without any PaaS.</p>
+  </section>
+
+  <footer>
+    © <span id="y">2026</span> Karan
+  </footer>
+</main>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>
