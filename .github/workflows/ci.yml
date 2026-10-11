@@ -1,0 +1,123 @@
+name: ci
+
+# Pull-request checks plus Trivy reporting to GitHub code scanning.
+# deploy.yml (main only) still gates releases with its own Trivy scan; this
+# workflow makes the same checks visible on PRs and in the Security tab, and
+# re-scans weekly so new CVEs show up even when nothing changed.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 5 * * 1" # Monday 05:00 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Build the production image natively for arm64 and run it the way
+  # deploy/compose.yaml does: read-only, no capabilities, no new privileges.
+  image:
+    name: build, smoke test and scan (linux/arm64)
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build (no push)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: linux/arm64
+          load: true
+          tags: er-portfolio:ci
+
+      - name: Smoke test (production runtime policy)
+        run: |
+          docker run -d --name web -p 8080:8080 \
+            --read-only --tmpfs /tmp --cap-drop ALL \
+            --security-opt no-new-privileges --memory 32m \
+            er-portfolio:ci
+          ok=false
+          for _ in $(seq 1 20); do
+            if curl -fsS -o /dev/null http://127.0.0.1:8080/healthz; then ok=true; break; fi
+            sleep 1
+          done
+          docker logs web 2>&1 | tail -20
+          $ok || { echo "::error::nginx did not answer /healthz"; exit 1; }
+          curl -fsS http://127.0.0.1:8080/ | grep -q '<title>Karan Shete' \
+            || { echo "::error::index.html is missing the expected title"; exit 1; }
+          curl -fsS -o /dev/null http://127.0.0.1:8080/cv/karan-shete-cv.pdf \
+            || { echo "::error::CV PDF is not served"; exit 1; }
+          test "$(docker exec web id -u)" = "101" \
+            || { echo "::error::container is not running as uid 101"; exit 1; }
+
+      - name: Trivy image (CRITICAL,HIGH → SARIF)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: er-portfolio:ci
+          format: sarif
+          output: trivy-image.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "0"
+
+      - name: Upload image SARIF
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-image
+
+      - name: Trivy gate (fail on fixable CRITICAL)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: er-portfolio:ci
+          format: table
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          skip-setup-trivy: true
+
+  # npm dependencies (package-lock.json), Dockerfile/compose misconfiguration
+  # and committed secrets.
+  repo:
+    name: trivy repo scan
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Trivy fs (vuln, misconfig, secret → SARIF)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig,secret
+          format: sarif
+          output: trivy-repo.sarif
+          severity: CRITICAL,HIGH,MEDIUM
+          ignore-unfixed: true
+          exit-code: "0"
+
+      - name: Upload repo SARIF
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          sarif_file: trivy-repo.sarif
+          category: trivy-repo

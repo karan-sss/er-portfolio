@@ -12,7 +12,11 @@ push to main → vite build → build linux/arm64 (native runner) → SBOM + pro
             → Trivy scan → cosign verify → deploy over Tailscale → docker compose up
 ```
 
-All of that is project-infra's reusable workflow
+Pull requests run `.github/workflows/ci.yml` first: an arm64 image build, a smoke test under the
+production runtime policy, and Trivy scans (image + repo) reported to GitHub code scanning. It
+re-scans weekly.
+
+The deploy itself is project-infra's reusable workflow
 (`.github/workflows/reusable-deploy-app.yml`), called from `.github/workflows/deploy.yml`.
 
 | Path | Purpose |
