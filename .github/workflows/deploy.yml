@@ -24,7 +24,7 @@ permissions: {}
 
 jobs:
   deploy:
-    uses: karan-sss/project-infra/.github/workflows/reusable-deploy-app.yml@685228eef68e081155eef05e68f605fe66d4abc6 # main
+    uses: karan-sss/project-infra/.github/workflows/reusable-deploy-app.yml@58dcc72fa45ac3b3e4a00712ff2b2a145d24d263 # main
     with:
       app_name: portfolio
     secrets:
