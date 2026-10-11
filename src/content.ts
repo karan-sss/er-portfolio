@@ -1,157 +1,171 @@
 // Single source of truth for everything the page says.
-// Keep every claim factual; the detailed, metric-heavy version lives in the CV.
+// The page is a showcase, not a CV: short, factual, outcome-first.
+// The detailed version lives in the private resume repo.
 
-export interface Link {
-  label: string;
-  href: string;
+// Every technology the page can show a logo for. A tech is either a Simple
+// Icons slug or a lettermark for brands Simple Icons does not ship.
+interface Tech {
+  icon?: string; // simple-icons slug, e.g. "apachekafka"
+  mark?: string; // lettermark fallback, e.g. "aws"
+  color?: string; // lettermark colour (hex, no #)
 }
 
-export interface Highlight {
+export const tech = {
+  Java: { icon: "openjdk" },
+  "Spring Boot": { icon: "springboot" },
+  Hibernate: { icon: "hibernate" },
+  "Apache Camel": { mark: "Ca", color: "E97826" },
+  Camunda: { icon: "camunda" },
+  "Node.js": { icon: "nodedotjs" },
+  Express: { icon: "express" },
+  Kafka: { icon: "apachekafka" },
+  RabbitMQ: { icon: "rabbitmq" },
+  PostgreSQL: { icon: "postgresql" },
+  Elasticsearch: { icon: "elasticsearch" },
+  Redis: { icon: "redis" },
+  MongoDB: { icon: "mongodb" },
+  Kubernetes: { icon: "kubernetes" },
+  OpenShift: { icon: "redhatopenshift" },
+  Docker: { icon: "docker" },
+  AWS: { mark: "aws", color: "FF9900" },
+  "Google Cloud": { icon: "googlecloud" },
+  DigitalOcean: { icon: "digitalocean" },
+  Terraform: { icon: "terraform" },
+  Jenkins: { icon: "jenkins" },
+  "GitHub Actions": { icon: "githubactions" },
+  Cloudflare: { icon: "cloudflare" },
+  Tailscale: { icon: "tailscale" },
+  Grafana: { icon: "grafana" },
+  "OpenID Connect": { icon: "openid" },
+  JWT: { icon: "jsonwebtokens" },
+  JMeter: { icon: "apachejmeter" },
+  Locust: { icon: "locust" },
+  Selenium: { icon: "selenium" },
+  Angular: { icon: "angular" },
+  TypeScript: { icon: "typescript" },
+  Razorpay: { icon: "razorpay" },
+  Discord: { icon: "discord" },
+} satisfies Record<string, Tech>;
+
+export type TechName = keyof typeof tech;
+
+export interface Work {
+  tag: string;
   title: string;
-  points: string[];
-}
-
-export interface Engagement {
-  where: string;
-  period: string;
-  highlights: Highlight[];
-  stack: string[];
-}
-
-export interface Job {
-  company: string;
-  role: string;
-  period: string;
-  engagements: Engagement[];
-}
-
-export interface Project {
-  name: string;
-  period: string;
   summary: string;
-  points: string[];
-  links: Link[];
+  results: string[];
+  tech: TechName[];
+  links?: { label: string; href: string }[];
+  wide?: boolean; // spans the full row
+  id?: string; // anchor target
 }
 
-export interface SkillGroup {
-  name: string;
-  items: string[];
+export interface Role {
+  period: string;
+  title: string;
+  where: string;
 }
 
 export const profile = {
   name: "Karan Shete",
   role: "Senior Backend Engineer",
-  focus: "Java · distributed systems · cloud",
+  headline: "I build the backend systems enterprises run on.",
   lead:
-    "I build backend systems for enterprise clients and run them in production. " +
-    "Since 2023 I have worked on-site in Switzerland for an insurance client, " +
-    "replacing a legacy messaging platform and building the APIs behind its multi-tenant portal.",
-  facts: ["Based in Switzerland", "7+ years experience", "Open to roles in Switzerland, the EU and India"],
+    "Java and distributed systems engineer with 7+ years at TCS. Since 2024 I have worked on-site " +
+    "with an enterprise client, alongside its stakeholders, building the APIs behind a multi-tenant portal " +
+    "for its customers and modernising legacy integrations.",
+  location: "Zurich, Switzerland",
   email: "shetekaran50@gmail.com",
   links: {
     github: "https://github.com/karan-sss",
     linkedin: "https://www.linkedin.com/in/karan-shete-311966140",
     status: "https://status.karan-s.com",
   },
+  stats: [
+    { value: "7+ years", label: "backend & enterprise systems" },
+    { value: "4× Best Performer", label: "awards at TCS" },
+  ],
 };
 
-export const jobs: Job[] = [
+export const stack: { group: string; items: TechName[] }[] = [
+  { group: "Backend", items: ["Java", "Spring Boot", "Hibernate", "Apache Camel", "Camunda", "Node.js"] },
+  { group: "Data & messaging", items: ["Kafka", "RabbitMQ", "PostgreSQL", "Elasticsearch", "Redis", "MongoDB"] },
+  { group: "Platform", items: ["Kubernetes", "OpenShift", "Docker", "AWS", "Google Cloud", "DigitalOcean", "Terraform", "Jenkins", "GitHub Actions"] },
+];
+
+export const alsoUsed =
+  "Angular, React, TypeScript, Python, Selenium, JMeter, Locust, OIDC / JWT, Linux. " +
+  "Learning offensive security on Hack The Box.";
+
+export const work: Work[] = [
   {
-    company: "Tata Consultancy Services",
-    role: "Software Developer",
-    period: "Feb 2019 – present",
-    engagements: [
-      {
-        where: "On-site · Swiss insurance client · Switzerland",
-        period: "Mar 2023 – present",
-        highlights: [
-          {
-            title: "Legacy messaging modernisation",
-            points: [
-              "Replaced an IBM MQ integration with Kafka, PostgreSQL and a new orchestration service.",
-              "Added phonetic name search on Elasticsearch.",
-              "Moved service authentication from mTLS to OIDC with JWT.",
-              "Load-tested with JMeter and Locust, found a single-pod memory ceiling at ~100 RPS and moved the service to horizontal pod scaling.",
-            ],
-          },
-          {
-            title: "Multi-tenant portal APIs",
-            points: [
-              "Own the backend for one tenant of a central multi-tenant UI.",
-              "Each request fans out to two or more downstream APIs in parallel (CompletableFuture on dedicated executors), without shared mutable state.",
-              "Resilience4j timeouts, retries and circuit breakers keep a slow dependency from taking the page down; Redis and Caffeine cache hot responses.",
-            ],
-          },
-        ],
-        stack: ["Java", "Spring Boot", "Kafka", "PostgreSQL", "Elasticsearch", "Resilience4j", "Redis", "OIDC / JWT", "Kubernetes", "JMeter", "Locust"],
-      },
-      {
-        where: "Pune, India",
-        period: "Feb 2019 – Mar 2023",
-        highlights: [
-          {
-            title: "Test execution platform",
-            points: [
-              "Microservices that run load, UI and API test suites from a central script store, with role-based access and job scheduling.",
-              "A CLI client that caches test files locally to cut network round-trips; services scale horizontally and independently.",
-            ],
-          },
-          {
-            title: "AngularJS 1.6 → Angular 14 migration",
-            points: ["Assessed the legacy app, planned the migration and rewrote controllers and services as Angular components."],
-          },
-          {
-            title: "IT service management tool",
-            points: ["ITIL workflows modelled in Camunda BPMN on a microservice backend, with service and database performance tuning."],
-          },
-        ],
-        stack: ["Java", "Spring Boot", "Camunda", "Angular", "MS SQL", "Jenkins"],
-      },
-    ],
+    tag: "Enterprise client · on-site · current",
+    title: "Multi-service API orchestration",
+    summary:
+      "Lead developer for one tenant's backend in a multi-tenant portal, working directly with client stakeholders. " +
+      "Requests fan out to several services in parallel, protected by Resilience4j and Redis/Caffeine caching; " +
+      "Locust load tests drove the move to horizontal scaling.",
+    results: ["Parallel fan-out", "Isolated from slow dependencies", "Load-tested, scales horizontally"],
+    tech: ["Java", "Spring Boot", "Redis", "JWT", "Kubernetes", "Locust"],
+  },
+  {
+    tag: "Enterprise client · on-site",
+    title: "Messaging modernisation: IBM MQ to Kafka",
+    summary:
+      "Replaced a legacy IBM MQ integration with Kafka, PostgreSQL and Elasticsearch phonetic search, with a daily " +
+      "Apache Camel job that pushes unverified addresses to Kafka. I developed the services, saw them through " +
+      "JMeter load tests and analysed and fixed defects through to production.",
+    results: ["~50M records scanned daily", "mTLS → OIDC / JWT", "Best Performer award"],
+    tech: ["Kafka", "Apache Camel", "PostgreSQL", "Elasticsearch", "Kubernetes", "OpenID Connect", "JMeter"],
+  },
+  {
+    tag: "TCS · enterprise product",
+    title: "Multi-tenant ITSM platform",
+    summary:
+      "A ServiceNow-style product for incident, problem, change and major-incident tickets, with approvals, " +
+      "change windows and CI management, orchestrated in Camunda BPMN over hierarchical tenants. " +
+      "I also migrated its frontend from AngularJS 1.6 to Angular 14.",
+    results: ["Camunda ticket orchestration", "Hierarchical multi-tenancy", "AngularJS → Angular 14", "Best Performer award"],
+    tech: ["Java", "Spring Boot", "Camunda", "Angular", "TypeScript"],
   },
 ];
 
-export const projects: Project[] = [
+export const workAlso =
+  "Test execution platform: one microservice runner for load, UI and API suites (Selenium, JMeter).";
+
+export const projects: Work[] = [
   {
-    name: "project-infra",
-    period: "2026",
-    summary: "The self-hosted production platform that runs this site, for about €7 a month.",
-    points: [
-      "Terraform for Hetzner ARM64, Cloudflare (DNS, WAF, R2) and Tailscale, applied only from CI.",
-      "Signed, scanned images (cosign, SBOM, Trivy); no public SSH.",
-      "A CI guard prices every plan and fails anything over €7.50.",
-      "Nightly encrypted backups with a monthly restore drill, Grafana monitoring and 14 ADRs.",
-    ],
+    id: "platform",
+    tag: "Open source · runs this site",
+    title: "Self-hosted production platform",
+    summary:
+      "The platform behind this site: a Terraform-built ARM64 server behind Cloudflare with VPN-only admin access " +
+      "and signed, scanned images. A CI cost guard, encrypted backups with a monthly restore drill, and an ADR for every major decision.",
+    results: ["€7 / month", "14 ADRs", "Monthly restore drill"],
+    tech: ["Terraform", "Cloudflare", "Tailscale", "Docker", "Grafana", "GitHub Actions"],
     links: [
       { label: "Repository", href: "https://github.com/karan-sss/project-infra" },
-      { label: "Status page", href: "https://status.karan-s.com" },
+      { label: "Live status", href: "https://status.karan-s.com" },
     ],
+    wide: true,
   },
   {
-    name: "Microservices sandbox",
-    period: "2022 – 2023",
-    summary: "Dockerised Express services behind an API gateway, talking over RabbitMQ with MongoDB storage.",
-    points: [],
-    links: [],
-  },
-  {
-    name: "Discord registration bot",
-    period: "2021",
-    summary: "Scheduled sign-ups for an esports community.",
-    points: ["15,000+ registrations over three months; manual sign-ups down 95%."],
-    links: [],
+    tag: "Personal project",
+    title: "Esports slot-booking bot",
+    summary:
+      "A Discord bot that runs slot registration for gaming communities: the first 20 players get slots, " +
+      "a waiting list is promoted on cancellations by cron jobs, and confirmed players receive a Razorpay payment link.",
+    results: ["15,000+ users", "Manual sign-ups down 95%", "Waiting list with auto-promotion"],
+    tech: ["Node.js", "Discord", "Razorpay"],
+    wide: true,
   },
 ];
 
-export const skills: SkillGroup[] = [
-  { name: "Backend", items: ["Java", "Spring Boot", "Spring Data JPA / Hibernate", "REST / OpenAPI", "Node.js / Express", "Python"] },
-  { name: "Distributed systems", items: ["Kafka", "RabbitMQ", "IBM MQ / JMS", "Resilience4j", "Async fan-out", "Camunda BPMN"] },
-  { name: "Data", items: ["PostgreSQL", "MS SQL", "MongoDB", "Redis", "Caffeine", "Elasticsearch"] },
-  {
-    name: "Cloud & platform",
-    items: ["Kubernetes / OpenShift", "Docker", "AWS (Lambda, API Gateway, EC2, S3, RDS)", "GCP (App Engine, Cloud Run)", "Terraform", "Jenkins", "GitLab CI", "Azure DevOps", "GitHub Actions"],
-  },
-  { name: "Frontend", items: ["Angular", "AngularJS", "React", "TypeScript"] },
-  { name: "Security", items: ["OIDC / OAuth 2.0", "JWT", "mTLS", "Supply-chain signing", "Learning offensive security on Hack The Box"] },
-  { name: "Testing", items: ["JMeter", "Locust", "Unit & integration tests"] },
+export const projectsAlso =
+  "Event-driven Node.js microservices over RabbitMQ and MongoDB, with Razorpay payments.";
+
+export const roles: Role[] = [
+  { period: "2024 — now", title: "Developer Lead, on-site", where: "TCS · enterprise client · Zurich, Switzerland" },
+  { period: "2023 — 2024", title: "Senior Developer", where: "TCS · Pune, India" },
+  { period: "2019 — 2022", title: "Software Developer", where: "TCS · Pune, India" },
 ];

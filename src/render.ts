@@ -1,80 +1,177 @@
 // Renders src/content.ts into static HTML. Runs in Node at build time via the
 // plugin in vite.config.ts, so it must not touch the DOM.
-import { jobs, profile, projects, skills, type Engagement, type Project } from "./content.ts";
+import * as simpleIcons from "simple-icons";
+import { alsoUsed, profile, projects, projectsAlso, roles, stack, tech, work, workAlso, type TechName, type Work } from "./content.ts";
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-const ext = (href: string, label: string) =>
-  `<a href="${esc(href)}" rel="noopener">${esc(label)}</a>`;
+// Email as numeric character references: browsers render it normally, naive
+// scrapers that grep the HTML for "@" do not see it.
+const obf = (s: string) => [...s].map((c) => `&#${c.codePointAt(0)};`).join("");
+const mailto = obf(`mailto:${profile.email}`);
 
-const list = (items: string[]) =>
-  items.length ? `<ul>${items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>` : "";
+const ext = (href: string, label: string, cls = "") =>
+  `<a href="${esc(href)}"${cls ? ` class="${cls}"` : ""} rel="noopener">${label}</a>`;
 
-const chips = (items: string[]) =>
-  `<ul class="chips">${items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>`;
+// --- logos -----------------------------------------------------------------
 
-const engagement = (e: Engagement) => `
-  <div class="engagement">
-    <div class="row"><h4>${esc(e.where)}</h4><span class="mono muted">${esc(e.period)}</span></div>
-    ${e.highlights.map((h) => `<div class="highlight"><h5>${esc(h.title)}</h5>${list(h.points)}</div>`).join("")}
-    ${chips(e.stack)}
-  </div>`;
+interface SimpleIcon {
+  slug: string;
+  path: string;
+  hex: string;
+}
+const iconsBySlug = new Map<string, SimpleIcon>(
+  Object.values(simpleIcons as unknown as Record<string, SimpleIcon>)
+    .filter((i) => i && typeof i === "object" && "slug" in i)
+    .map((i) => [i.slug, i]),
+);
 
-const project = (p: Project) => `
-  <article class="card">
-    <div class="row"><h3>${esc(p.name)}</h3><span class="mono muted">${esc(p.period)}</span></div>
-    <p>${esc(p.summary)}</p>
-    ${list(p.points)}
-    ${p.links.length ? `<p class="links">${p.links.map((l) => ext(l.href, l.label)).join("")}</p>` : ""}
+function luminance(hex: string): number {
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+// Near-black brand colours vanish on the dark theme and very light ones on the
+// light theme; CSS swaps those to the text colour per theme (see .logo.dk/.lt).
+function tone(hex: string): string {
+  const l = luminance(hex);
+  return l < 0.04 ? " dk" : l > 0.55 ? " lt" : "";
+}
+
+const used = new Set<string>();
+
+function brand(slug: string): string {
+  const i = iconsBySlug.get(slug);
+  if (!i) throw new Error(`simple-icons has no "${slug}"`);
+  used.add(slug);
+  return `<svg class="logo${tone(i.hex)}" style="--c:#${i.hex}" aria-hidden="true"><use href="#i-${slug}"/></svg>`;
+}
+
+function logo(name: TechName): string {
+  const t: { icon?: string; mark?: string; color?: string } = tech[name];
+  if (t.icon) return brand(t.icon);
+  const hex = t.color ?? "888888";
+  return `<span class="logo mark${tone(hex)}" style="--c:#${hex}" aria-hidden="true">${esc(t.mark ?? name[0])}</span>`;
+}
+
+// One hidden sprite; every logo on the page is a <use> into it.
+const sprite = () =>
+  `<svg width="0" height="0" style="position:absolute" aria-hidden="true">${[...used]
+    .map((s) => `<symbol id="i-${s}" viewBox="0 0 24 24"><path fill="currentColor" d="${iconsBySlug.get(s)!.path}"/></symbol>`)
+    .join("")}</svg>`;
+
+// --- inline UI icons (stroke, Lucide-style) --------------------------------
+
+const ui = {
+  mail: '<path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/>',
+  arrow: '<path d="M7 17 17 7"/><path d="M8 7h9v9"/>',
+  pin: '<path d="M12 21s-6-5.3-6-11a6 6 0 0 1 12 0c0 5.7-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>',
+};
+const uiIcon = (k: keyof typeof ui) =>
+  `<svg class="ui" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ui[k]}</svg>`;
+
+// --- sections --------------------------------------------------------------
+
+const heading = (n: number, id: string, title: string) =>
+  `<h2 id="${id}"><span class="mono">${String(n).padStart(2, "0")}</span> ${esc(title)}</h2>`;
+
+const hero = () => `
+<header class="hero">
+  <div class="hero-main">
+    <p class="who"><img class="avatar" src="/img/avatar.webp" width="320" height="320" alt="Portrait of ${esc(profile.name)}">
+      <span><strong>${esc(profile.name)}</strong><br><span class="muted">${esc(profile.role)}</span></span></p>
+    <h1>${esc(profile.headline)}</h1>
+    <p class="lead">${esc(profile.lead)}</p>
+    <p class="actions">
+      <a class="btn primary" href="${mailto}">${uiIcon("mail")}Get in touch</a>
+      ${ext(profile.links.github, `${brand("github")}GitHub`, "btn")}
+      ${ext(profile.links.linkedin, "LinkedIn", "btn")}
+      <span class="loc mono">${uiIcon("pin")}${esc(profile.location)}</span>
+    </p>
+    <ul class="stats">
+      ${profile.stats.map((s) => `<li><strong>${esc(s.value)}</strong><span>${esc(s.label)}</span></li>`).join("")}
+    </ul>
+  </div>
+</header>`;
+
+const stackSection = (n: number) => `
+<section id="stack" aria-labelledby="h-stack">
+  ${heading(n, "h-stack", "Stack")}
+  <div class="stack">
+    ${stack
+      .map(
+        (g) => `
+    <div class="stack-group">
+      <h3 class="mono">${esc(g.group)}</h3>
+      <ul class="tiles">${g.items.map((t) => `<li class="tile">${logo(t)}<span>${esc(t)}</span></li>`).join("")}</ul>
+    </div>`,
+      )
+      .join("")}
+  </div>
+  <p class="also-used"><span class="mono">Also</span>${esc(alsoUsed)}</p>
+</section>`;
+
+const card = (w: Work) => `
+  <article class="work${w.wide ? " wide" : ""}"${w.id ? ` id="${esc(w.id)}"` : ""}>
+    <p class="tag mono">${esc(w.tag)}</p>
+    <h3>${esc(w.title)}</h3>
+    <p class="summary">${esc(w.summary)}</p>
+    <ul class="results mono">${w.results.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>
+    <div class="work-foot">
+      <span class="logos" role="list" aria-label="Technologies">${w.tech
+        .map((t) => `<span role="listitem" title="${esc(t)}">${logo(t)}<span class="sr">${esc(t)}</span></span>`)
+        .join("")}</span>
+      ${w.links ? `<span class="work-links">${w.links.map((l) => ext(l.href, `${esc(l.label)}${uiIcon("arrow")}`)).join("")}</span>` : ""}
+    </div>
   </article>`;
 
-export function renderPage(): string {
-  const { links } = profile;
-  return `
-<header class="hero">
-  <p class="eyebrow mono">${esc(profile.role)} · ${esc(profile.focus)}</p>
-  <h1>${esc(profile.name)}</h1>
-  <p class="lead">${esc(profile.lead)}</p>
-  <ul class="facts mono">${profile.facts.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>
-  <p class="actions">
-    <a class="btn primary" href="mailto:${esc(profile.email)}">Email me</a>
-    <a class="btn" href="${esc(links.github)}" rel="noopener">GitHub</a>
-    <a class="btn" href="${esc(links.linkedin)}" rel="noopener">LinkedIn</a>
-  </p>
-</header>
+const workSection = (n: number) => `
+<section id="work" aria-labelledby="h-work">
+  ${heading(n, "h-work", "Work")}
+  <div class="works single">${work.map(card).join("")}</div>
+  <p class="also-line"><span class="mono">Also</span>${esc(workAlso)}</p>
+</section>`;
 
-<section id="experience" aria-labelledby="h-exp">
-  <h2 id="h-exp">Experience</h2>
-  ${jobs
-    .map(
-      (j) => `
-  <article class="card">
-    <div class="row"><h3>${esc(j.company)}</h3><span class="mono muted">${esc(j.period)}</span></div>
-    <p class="muted">${esc(j.role)}</p>
-    ${j.engagements.map(engagement).join("")}
-  </article>`,
-    )
-    .join("")}
-</section>
+const projectsSection = (n: number) => `
+<section id="projects" aria-labelledby="h-projects">
+  ${heading(n, "h-projects", "Side projects")}
+  <div class="works">${projects.map(card).join("")}</div>
+  <p class="also-line"><span class="mono">Also</span>${esc(projectsAlso)}</p>
+</section>`;
 
-<section id="projects" aria-labelledby="h-proj">
-  <h2 id="h-proj">Projects</h2>
-  <div class="grid">${projects.map(project).join("")}</div>
-</section>
+const pathSection = (n: number) => `
+<section id="path" aria-labelledby="h-path">
+  ${heading(n, "h-path", "Path")}
+  <ol class="timeline">
+    ${roles
+      .map((r) => `<li><span class="mono muted">${esc(r.period)}</span><strong>${esc(r.title)}</strong><span class="where muted">${esc(r.where)}</span></li>`)
+      .join("")}
+  </ol>
+</section>`;
 
-<section id="skills" aria-labelledby="h-skills">
-  <h2 id="h-skills">Skills</h2>
-  <dl class="skills">
-    ${skills.map((g) => `<div><dt>${esc(g.name)}</dt><dd>${chips(g.items)}</dd></div>`).join("")}
-  </dl>
-</section>
-
+const footer = () => `
 <footer>
-  <p>CV available on request: <a href="mailto:${esc(profile.email)}">${esc(profile.email)}</a></p>
-  <p class="links">
-    ${ext(links.github, "GitHub")}${ext(links.linkedin, "LinkedIn")}${ext(links.status, "Status")}
+  <h2 class="cta">Contact</h2>
+  <p class="muted">CV available on request.</p>
+  <p class="actions">
+    <a class="btn primary" href="${mailto}">${uiIcon("mail")}${obf(profile.email)}</a>
+    ${ext(profile.links.github, `${brand("github")}GitHub`, "btn")}
+    ${ext(profile.links.linkedin, "LinkedIn", "btn")}
   </p>
-  <p class="muted mono">© <span id="year">${new Date().getFullYear()}</span> ${esc(profile.name)}</p>
+  <p class="foot-links mono">
+    ${ext(profile.links.status, "Status")}
+    <span class="muted">© <span id="year">${new Date().getFullYear()}</span> ${esc(profile.name)}</span>
+  </p>
 </footer>`;
+
+export function renderPage(): string {
+  used.clear();
+  const live = `<a class="live" href="#platform" title="This site runs on my self-hosted platform">
+  <span class="dot" aria-hidden="true"></span><span class="live-label">Live</span><span class="live-text">· self-hosted on my own platform</span></a>`;
+  const body = live + hero() + stackSection(1) + workSection(2) + projectsSection(3) + pathSection(4) + footer();
+  return sprite() + body;
 }
