@@ -217,6 +217,7 @@ section > h2 .mono { font-size: .8rem; font-weight: 500; color: var(--accent); l
 footer { border-top: 1px solid var(--line); padding-top: 64px; }
 footer .cta { font-size: clamp(1.6rem, 3.5vw, 2.1rem); font-weight: 600; letter-spacing: -.03em; margin-bottom: 8px; }
 footer > .muted { margin: 0 0 20px; }
+.cv-link { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 .foot-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 48px 0 0; font-size: .82rem; }
 .foot-links a:hover { color: var(--accent); }
 .foot-links .muted { margin-left: auto; }

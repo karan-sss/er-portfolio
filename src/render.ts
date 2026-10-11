@@ -69,6 +69,7 @@ const sprite = () =>
 const ui = {
   mail: '<path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/>',
   arrow: '<path d="M7 17 17 7"/><path d="M8 7h9v9"/>',
+  download: '<path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/>',
   pin: '<path d="M12 21s-6-5.3-6-11a6 6 0 0 1 12 0c0 5.7-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>',
 };
 const uiIcon = (k: keyof typeof ui) =>
@@ -90,6 +91,7 @@ const hero = () => `
       <a class="btn primary" href="${mailto}">${uiIcon("mail")}Get in touch</a>
       ${ext(profile.links.github, `${brand("github")}GitHub`, "btn")}
       ${ext(profile.links.linkedin, "LinkedIn", "btn")}
+      <a class="btn" href="${profile.cv}" download>${uiIcon("download")}CV (PDF)</a>
       <span class="loc mono">${uiIcon("pin")}${esc(profile.location)}</span>
     </p>
     <ul class="stats">
@@ -156,7 +158,7 @@ const pathSection = (n: number) => `
 const footer = () => `
 <footer>
   <h2 class="cta">Contact</h2>
-  <p class="muted">CV available on request.</p>
+  <p class="muted"><a class="cv-link" href="${profile.cv}" download>Download the one-page CV</a> · full CV available on request.</p>
   <p class="actions">
     <a class="btn primary" href="${mailto}">${uiIcon("mail")}${obf(profile.email)}</a>
     ${ext(profile.links.github, `${brand("github")}GitHub`, "btn")}

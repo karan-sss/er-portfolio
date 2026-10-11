@@ -76,6 +76,8 @@ export const profile = {
     "for its customers and modernising legacy integrations.",
   location: "Zurich, Switzerland",
   email: "shetekaran50@gmail.com",
+  // Public one-page CV (built in the private resume repo: npm run publish:web).
+  cv: "/cv/karan-shete-cv.pdf",
   links: {
     github: "https://github.com/karan-sss",
     linkedin: "https://www.linkedin.com/in/karan-shete-311966140",
