@@ -2,7 +2,7 @@
 # Built for linux/arm64 in CI by project-infra's reusable-deploy-app workflow.
 
 # --- build: static files only; nothing from this stage ships except dist/ ---
-FROM node:22.23.3-alpine3.24@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS build
+FROM node:24.22.0-alpine3.24@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-fund --no-audit
