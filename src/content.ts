@@ -123,9 +123,9 @@ export const work: Work[] = [
       "A bounded-context API layer fans requests out in parallel to several downstream services, including slow legacy systems, " +
       "while keeping each tenant's traffic and failures isolated.",
     decisions: [
-      "Two-tier cache (L1 Caffeine in-process, L2 Redis shared) shields slow legacy downstreams: [TODO: cache hit rate]% hit rate, p95 cut from [TODO: before] ms to [TODO: after] ms.",
+      "Two-tier cache (L1 Caffeine in-process, L2 Redis shared) shields slow legacy downstreams: ~90% hit rate, cutting p95 latency by ~70%.",
       "Resilience4j circuit breakers and bulkheads per downstream, so one degraded dependency cannot exhaust shared threads or take down the tenant.",
-      "Locust load tests exposed the bottleneck and drove horizontal pod autoscaling, sustaining [TODO: peak RPS] req/s.",
+      "Locust load tests exposed the bottleneck and drove horizontal pod autoscaling, sustaining 2,000 concurrent users.",
     ],
     results: ["Parallel bounded-context fan-out", "L1 Caffeine + L2 Redis", "Circuit breakers & bulkheads", "Autoscaled on load-test data"],
     tech: ["Java", "Spring Boot", "Redis", "JWT", "Kubernetes", "Locust"],
@@ -134,12 +134,12 @@ export const work: Work[] = [
     tag: "Enterprise client · on-site",
     title: "Messaging modernisation: IBM MQ to Kafka",
     summary:
-      "Replaced a legacy IBM MQ integration with an event-driven Kafka pipeline over PostgreSQL and Elasticsearch, migrated without data loss " +
-      "while the old path stayed live. A daily Apache Camel job scans ~50M records and publishes unverified addresses to Kafka.",
+      "Replaced a legacy IBM MQ integration with an event-driven Kafka pipeline over PostgreSQL and Elasticsearch, cut over without data loss. " +
+      "A daily Apache Camel job scans ~50M records and publishes unverified addresses to Kafka.",
     decisions: [
-      "Zero-data-loss cutover: [TODO: migration approach, e.g. parallel run / reconciliation] before switching consumers off IBM MQ.",
+      "Zero-data-loss cutover: a new Kafka consumer first reloaded the full dataset, then the live line switched over and only the remaining delta flowed through the new pipeline.",
       "Backpressure-aware consumers with dead-letter topics, so poison messages are isolated and replayable instead of blocking the stream.",
-      "Elasticsearch phonetic analysers for fuzzy name and address matching, at [TODO: search p95] ms.",
+      "Elasticsearch phonetic analysers for fuzzy name and address matching, at sub-100 ms.",
       "Security hardened from legacy mTLS to OIDC / JWT service-to-service auth.",
     ],
     results: ["~50M records / day", "Zero data loss", "mTLS → OIDC / JWT", "Best Performer award"],
@@ -150,7 +150,7 @@ export const work: Work[] = [
     title: "Multi-tenant ITSM platform",
     summary:
       "A ServiceNow-style product for incident, problem, change and major-incident management, with approvals, " +
-      "change windows and CI management, serving [TODO: number of tenants] tenants.",
+      "change windows and CI management, serving 10+ tenants.",
     decisions: [
       "Hierarchical multi-tenancy with data isolation enforced at every level of the tenant tree.",
       "Stateful ticket lifecycles orchestrated as Camunda BPMN workflows, so approvals and change windows are explicit, auditable state machines.",
