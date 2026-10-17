@@ -85,7 +85,7 @@ export const profile = {
   },
   stats: [
     { value: "7+ years", label: "backend & enterprise systems" },
-    { value: "4× Best Performer", label: "awards at TCS" },
+    { value: "4× Best Performer", label: "across enterprise deliveries" },
   ],
 };
 
@@ -125,7 +125,7 @@ export const work: Work[] = [
     decisions: [
       "Two-tier cache (L1 Caffeine in-process, L2 Redis shared) shields slow legacy downstreams: ~90% hit rate, cutting p95 latency by ~70%.",
       "Resilience4j circuit breakers and bulkheads per downstream, so one degraded dependency cannot exhaust shared threads or take down the tenant.",
-      "Locust load tests exposed the bottleneck and drove horizontal pod autoscaling, sustaining 2,000 concurrent users.",
+      "Locust load tests exposed the bottleneck and drove horizontal pod autoscaling, sustaining 2,000 concurrent users (~400 RPS across 4 pods).",
     ],
     results: ["Parallel bounded-context fan-out", "L1 Caffeine + L2 Redis", "Circuit breakers & bulkheads", "Autoscaled on load-test data"],
     tech: ["Java", "Spring Boot", "Redis", "JWT", "Kubernetes", "Locust"],
@@ -204,7 +204,7 @@ export const projectsAlso =
   "Event-driven Node.js microservices over RabbitMQ and MongoDB, with Razorpay payments.";
 
 export const roles: Role[] = [
-  { period: "2024 — now", title: "Developer Lead, on-site", where: "TCS · enterprise client · Zurich, Switzerland" },
-  { period: "2023 — 2024", title: "Senior Developer", where: "TCS · Pune, India" },
-  { period: "2019 — 2022", title: "Software Developer", where: "TCS · Pune, India" },
+  { period: "2024 — now", title: "Developer Lead, on-site", where: "TCS · enterprise client · distributed APIs & Kafka modernisation · Zurich, Switzerland" },
+  { period: "2023 — 2024", title: "Senior Developer", where: "TCS · enterprise backend & platform delivery · Pune, India" },
+  { period: "2019 — 2022", title: "Software Developer", where: "TCS · multi-tenant ITSM & Camunda orchestration · Pune, India" },
 ];

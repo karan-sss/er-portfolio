@@ -18,6 +18,10 @@ const rich = (s: string) =>
 // scrapers that grep the HTML for "@" do not see it.
 const obf = (s: string) => [...s].map((c) => `&#${c.codePointAt(0)};`).join("");
 const mailto = obf(`mailto:${profile.email}`);
+// Cloudflare Email Obfuscation (if ever enabled on the zone) rewrites mailto
+// links into /cdn-cgi/ redirects that need its JS; email_off opts these out.
+const mailLink = (label: string) =>
+  `<!--email_off--><a class="btn primary" href="${mailto}">${uiIcon("mail")}${label}</a><!--/email_off-->`;
 
 const ext = (href: string, label: string, cls = "") =>
   `<a href="${esc(href)}"${cls ? ` class="${cls}"` : ""} rel="noopener">${label}</a>`;
@@ -96,7 +100,7 @@ const hero = () => `
     <h1>${esc(profile.headline)}</h1>
     <p class="lead">${esc(profile.lead)}</p>
     <p class="actions">
-      <a class="btn primary" href="${mailto}">${uiIcon("mail")}Get in touch</a>
+      ${mailLink("Get in touch")}
       ${ext(profile.links.github, `${brand("github")}GitHub`, "btn")}
       ${ext(profile.links.linkedin, "LinkedIn", "btn")}
       <a class="btn" href="${profile.cv}" download>${uiIcon("download")}CV (PDF)</a>
@@ -179,7 +183,7 @@ const footer = () => `
   <h2 class="cta">Contact</h2>
   <p class="muted"><a class="cv-link" href="${profile.cv}" download>Download the one-page CV</a> · full CV available on request.</p>
   <p class="actions">
-    <a class="btn primary" href="${mailto}">${uiIcon("mail")}${obf(profile.email)}</a>
+    ${mailLink(obf(profile.email))}
     ${ext(profile.links.github, `${brand("github")}GitHub`, "btn")}
     ${ext(profile.links.linkedin, "LinkedIn", "btn")}
   </p>
