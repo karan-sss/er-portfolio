@@ -53,7 +53,8 @@ export interface Work {
   tag: string;
   title: string;
   summary: string;
-  results: string[];
+  decisions?: string[]; // key decision → why
+  results: (string | { label: string; href: string })[];
   tech: TechName[];
   links?: { label: string; href: string }[];
   wide?: boolean; // spans the full row
@@ -68,12 +69,11 @@ export interface Role {
 
 export const profile = {
   name: "Karan Shete",
-  role: "Senior Backend Engineer",
-  headline: "I build the backend systems enterprises run on.",
+  role: "Senior Distributed Systems & Forward-Deployed Engineer",
+  headline: "I untangle complex enterprise architecture and ship high-throughput systems.",
   lead:
-    "Java and distributed systems engineer with 7+ years at TCS. Since 2024 I have worked on-site " +
-    "with an enterprise client, alongside its stakeholders, building the APIs behind a multi-tenant portal " +
-    "for its customers and modernising legacy integrations.",
+    "7+ years architecting mission-critical distributed systems, event-driven pipelines, and cloud infrastructure. " +
+    "Embedded on-site with enterprise stakeholders in Zurich, taking ambiguous business problems from whiteboard to load-tested production.",
   location: "Zurich, Switzerland",
   email: "shetekaran50@gmail.com",
   // Public one-page CV (built in the private resume repo: npm run publish:web).
@@ -99,35 +99,64 @@ export const alsoUsed =
   "Angular, React, TypeScript, Python, Selenium, JMeter, Locust, OIDC / JWT, Linux. " +
   "Learning offensive security on Hack The Box.";
 
+export const approach: { title: string; body: string }[] = [
+  {
+    title: "On-site stakeholder alignment",
+    body: "I work directly with client VPs and architects, turning messy business requirements into concrete system designs, trade-offs and delivery plans.",
+  },
+  {
+    title: "Legacy-to-modern cutovers",
+    body: "I replace entrenched enterprise bottlenecks (IBM MQ, monoliths, AngularJS) in live production, with no downtime and no feature freeze.",
+  },
+  {
+    title: "End-to-end production ownership",
+    body: "From the Java / Node.js service to Terraform provisioning, load testing with Locust and JMeter, and Grafana observability. I own it after it ships.",
+  },
+];
+
 export const work: Work[] = [
   {
     tag: "Enterprise client · on-site · current",
     title: "Multi-service API orchestration",
     summary:
-      "Lead developer for one tenant's backend in a multi-tenant portal, working directly with client stakeholders. " +
-      "Requests fan out to several services in parallel, protected by Resilience4j and Redis/Caffeine caching; " +
-      "Locust load tests drove the move to horizontal scaling.",
-    results: ["Parallel fan-out", "Isolated from slow dependencies", "Load-tested, scales horizontally"],
+      "Lead developer for one tenant's backend in a multi-tenant customer portal, designed directly with client architects. " +
+      "A bounded-context API layer fans requests out in parallel to several downstream services, including slow legacy systems, " +
+      "while keeping each tenant's traffic and failures isolated.",
+    decisions: [
+      "Two-tier cache (L1 Caffeine in-process, L2 Redis shared) shields slow legacy downstreams: ~90% hit rate, cutting p95 latency by ~70%.",
+      "Resilience4j circuit breakers and bulkheads per downstream, so one degraded dependency cannot exhaust shared threads or take down the tenant.",
+      "Locust load tests exposed the bottleneck and drove horizontal pod autoscaling, sustaining 2,000 concurrent users.",
+    ],
+    results: ["Parallel bounded-context fan-out", "L1 Caffeine + L2 Redis", "Circuit breakers & bulkheads", "Autoscaled on load-test data"],
     tech: ["Java", "Spring Boot", "Redis", "JWT", "Kubernetes", "Locust"],
   },
   {
     tag: "Enterprise client · on-site",
     title: "Messaging modernisation: IBM MQ to Kafka",
     summary:
-      "Replaced a legacy IBM MQ integration with Kafka, PostgreSQL and Elasticsearch phonetic search, with a daily " +
-      "Apache Camel job that pushes unverified addresses to Kafka. I developed the services, saw them through " +
-      "JMeter load tests and analysed and fixed defects through to production.",
-    results: ["~50M records scanned daily", "mTLS → OIDC / JWT", "Best Performer award"],
+      "Replaced a legacy IBM MQ integration with an event-driven Kafka pipeline over PostgreSQL and Elasticsearch, cut over without data loss. " +
+      "A daily Apache Camel job scans ~50M records and publishes unverified addresses to Kafka.",
+    decisions: [
+      "Zero-data-loss cutover: a new Kafka consumer first reloaded the full dataset, then the live line switched over and only the remaining delta flowed through the new pipeline.",
+      "Backpressure-aware consumers with dead-letter topics, so poison messages are isolated and replayable instead of blocking the stream.",
+      "Elasticsearch phonetic analysers for fuzzy name and address matching, at sub-100 ms.",
+      "Security hardened from legacy mTLS to OIDC / JWT service-to-service auth.",
+    ],
+    results: ["~50M records / day", "Zero data loss", "mTLS → OIDC / JWT", "Best Performer award"],
     tech: ["Kafka", "Apache Camel", "PostgreSQL", "Elasticsearch", "Kubernetes", "OpenID Connect", "JMeter"],
   },
   {
     tag: "TCS · enterprise product",
     title: "Multi-tenant ITSM platform",
     summary:
-      "A ServiceNow-style product for incident, problem, change and major-incident tickets, with approvals, " +
-      "change windows and CI management, orchestrated in Camunda BPMN over hierarchical tenants. " +
-      "I also migrated its frontend from AngularJS 1.6 to Angular 14.",
-    results: ["Camunda ticket orchestration", "Hierarchical multi-tenancy", "AngularJS → Angular 14", "Best Performer award"],
+      "A ServiceNow-style product for incident, problem, change and major-incident management, with approvals, " +
+      "change windows and CI management, serving 10+ tenants.",
+    decisions: [
+      "Hierarchical multi-tenancy with data isolation enforced at every level of the tenant tree.",
+      "Stateful ticket lifecycles orchestrated as Camunda BPMN workflows, so approvals and change windows are explicit, auditable state machines.",
+      "Led a strangler-fig frontend migration from AngularJS 1.6 to Angular 14, module by module, without halting feature delivery.",
+    ],
+    results: ["Camunda BPMN orchestration", "Hierarchical multi-tenancy", "AngularJS → Angular 14, no freeze", "Best Performer award"],
     tech: ["Java", "Spring Boot", "Camunda", "Angular", "TypeScript"],
   },
 ];
@@ -141,13 +170,21 @@ export const projects: Work[] = [
     tag: "Open source · runs this site",
     title: "Self-hosted production platform",
     summary:
-      "The platform behind this site: a Terraform-built ARM64 server behind Cloudflare with VPN-only admin access " +
-      "and signed, scanned images. A CI cost guard, encrypted backups with a monthly restore drill, and an ADR for every major decision.",
-    results: ["€7 / month", "14 ADRs", "Monthly restore drill"],
+      "The platform behind this site, run with production SRE discipline: a Terraform-built ARM64 server behind Cloudflare, " +
+      "zero-trust admin access over Tailscale only, and signed, vulnerability-scanned container images. " +
+      "Encrypted backups are proven by automated monthly restore drills, a CI cost guard holds it at €7 / month, and every major decision is an ADR.",
+    results: [
+      "€7 / month, CI cost guard",
+      { label: "14 ADRs", href: "https://github.com/karan-sss/project-infra/tree/main/docs/adr" },
+      "Automated restore drills",
+      "Zero-trust admin (Tailscale)",
+      "Signed & scanned images",
+    ],
     tech: ["Terraform", "Cloudflare", "Tailscale", "Docker", "Grafana", "GitHub Actions"],
     links: [
       { label: "Repository", href: "https://github.com/karan-sss/project-infra" },
       { label: "Live status", href: "https://status.karan-s.com" },
+      { label: "ADRs", href: "https://github.com/karan-sss/project-infra/tree/main/docs/adr" },
     ],
     wide: true,
   },

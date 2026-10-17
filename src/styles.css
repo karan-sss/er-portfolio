@@ -13,6 +13,7 @@
   --dot: #d9d9d4;
   --glow: rgba(45, 212, 191, .18);
   --ok: #16a34a;
+  --warn: #b45309;
   --lt: var(--text); /* light brand logos fall back to text colour */
   --sans: "Geist Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -31,6 +32,7 @@
     --dot: #1d1d22;
     --glow: rgba(45, 212, 191, .10);
     --ok: #4ade80;
+    --warn: #fbbf24;
     --lt: initial;
     --dk: var(--text); /* near-black brand logos fall back to text colour */
   }
@@ -48,6 +50,7 @@
   --dot: #1d1d22;
   --glow: rgba(45, 212, 191, .10);
   --ok: #4ade80;
+  --warn: #fbbf24;
   --lt: initial;
   --dk: var(--text);
 }
@@ -116,8 +119,13 @@ svg.ui { width: 16px; height: 16px; flex: none; }
 .hero h1 {
   font-size: clamp(2.5rem, 7.2vw, 4.4rem); font-weight: 650; letter-spacing: -.045em; margin-bottom: 22px;
   text-wrap: balance;
-  background: linear-gradient(180deg, var(--text) 30%, color-mix(in srgb, var(--text) 55%, var(--bg)));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
+  color: var(--text);
+}
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .hero h1 {
+    background: linear-gradient(180deg, var(--text) 30%, color-mix(in srgb, var(--text) 55%, var(--bg)));
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  }
 }
 .lead { font-size: clamp(1.05rem, 2.2vw, 1.2rem); color: var(--muted); margin: 0 0 32px; max-width: 40em; text-wrap: pretty; }
 
@@ -189,7 +197,21 @@ section > h2 .mono { font-size: .8rem; font-weight: 500; color: var(--accent); l
   margin: 0; font-size: .78rem; padding: 4px 10px; border-radius: 999px;
   background: var(--surface-2); border: 1px solid var(--line);
 }
+.results a { color: inherit; }
+.results a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.results li:has(a) { transition: border-color .15s; }
+.results li:has(a):hover { border-color: var(--muted); }
 .results li:first-child { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.decisions { list-style: none; margin: 2px 0 0; padding: 0; display: grid; gap: 6px; max-width: 72ch; }
+.decisions li { display: flex; gap: 6px; font-size: .92rem; color: var(--muted); }
+.decisions li::before { content: "›"; color: var(--accent); font-weight: 600; flex: none; }
+.todo-metric {
+  display: inline; font-family: var(--mono); font-size: .85em; padding: 0 4px; border-radius: 4px;
+  color: var(--warn); outline: 1px dashed var(--warn); outline-offset: 1px;
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+}
+.approach { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.approach .work h3 { font-size: 1.1rem; }
 .work-foot {
   margin-top: auto; padding-top: 16px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;
 }
@@ -235,7 +257,7 @@ footer > .muted { margin: 0 0 20px; }
   .live-text { display: none; }
   main { padding-top: 72px; }
   .hero, section { margin-bottom: 72px; }
-  .works { grid-template-columns: 1fr; }
+  .works, .approach { grid-template-columns: 1fr; }
   .stats { grid-auto-flow: row; }
   .stats li + li { border-left: 0; border-top: 1px solid var(--line); }
   .stack { grid-template-columns: 1fr; }
@@ -252,5 +274,13 @@ footer > .muted { margin: 0 0 20px; }
 
 @media print {
   body { background: #fff; }
+  :root, :root[data-theme="dark"], :root:not([data-theme="light"]) {
+    --text: #111113; --muted: #444; --bg: #fff; --surface: #fff; --line: #ddd;
+  }
+  .hero h1 { background: none; color: #000; -webkit-text-fill-color: currentColor; }
   .theme-toggle, .actions { display: none; }
+}
+
+@media (forced-colors: active) {
+  .hero h1 { background: none; color: CanvasText; -webkit-text-fill-color: CanvasText; }
 }

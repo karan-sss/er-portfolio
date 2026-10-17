@@ -1,10 +1,18 @@
 // Renders src/content.ts into static HTML. Runs in Node at build time via the
 // plugin in vite.config.ts, so it must not touch the DOM.
 import * as simpleIcons from "simple-icons";
-import { alsoUsed, profile, projects, projectsAlso, roles, stack, tech, work, workAlso, type TechName, type Work } from "./content.ts";
+import { alsoUsed, approach, profile, projects, projectsAlso, roles, stack, tech, work, workAlso, type TechName, type Work } from "./content.ts";
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+// esc() plus a visible marker for unfilled "[TODO: ...]" metric placeholders.
+let todos = 0;
+const rich = (s: string) =>
+  esc(s).replace(/\[TODO:[^\]]*\]/g, (m) => {
+    todos++;
+    return `<span class="todo-metric">${m}</span>`;
+  });
 
 // Email as numeric character references: browsers render it normally, naive
 // scrapers that grep the HTML for "@" do not see it.
@@ -121,8 +129,11 @@ const card = (w: Work) => `
   <article class="work${w.wide ? " wide" : ""}"${w.id ? ` id="${esc(w.id)}"` : ""}>
     <p class="tag mono">${esc(w.tag)}</p>
     <h3>${esc(w.title)}</h3>
-    <p class="summary">${esc(w.summary)}</p>
-    <ul class="results mono">${w.results.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>
+    <p class="summary">${rich(w.summary)}</p>
+    ${w.decisions ? `<ul class="decisions">${w.decisions.map((d) => `<li>${rich(d)}</li>`).join("")}</ul>` : ""}
+    <ul class="results mono">${w.results
+      .map((r) => `<li>${typeof r === "string" ? rich(r) : ext(r.href, esc(r.label))}</li>`)
+      .join("")}</ul>
     <div class="work-foot">
       <span class="logos" role="list" aria-label="Technologies">${w.tech
         .map((t) => `<span role="listitem" title="${esc(t)}">${logo(t)}<span class="sr">${esc(t)}</span></span>`)
@@ -130,6 +141,14 @@ const card = (w: Work) => `
       ${w.links ? `<span class="work-links">${w.links.map((l) => ext(l.href, `${esc(l.label)}${uiIcon("arrow")}`)).join("")}</span>` : ""}
     </div>
   </article>`;
+
+const approachSection = (n: number) => `
+<section id="approach" aria-labelledby="h-approach">
+  ${heading(n, "h-approach", "How I work")}
+  <div class="approach">
+    ${approach.map((a) => `<article class="work"><h3>${esc(a.title)}</h3><p class="summary">${esc(a.body)}</p></article>`).join("")}
+  </div>
+</section>`;
 
 const workSection = (n: number) => `
 <section id="work" aria-labelledby="h-work">
@@ -172,8 +191,10 @@ const footer = () => `
 
 export function renderPage(): string {
   used.clear();
+  todos = 0;
   const live = `<a class="live" href="#platform" title="This site runs on my self-hosted platform">
   <span class="dot" aria-hidden="true"></span><span class="live-label">Live</span><span class="live-text">· self-hosted on my own platform</span></a>`;
-  const body = live + hero() + stackSection(1) + workSection(2) + projectsSection(3) + pathSection(4) + footer();
+  const body = live + hero() + stackSection(1) + approachSection(2) + workSection(3) + projectsSection(4) + pathSection(5) + footer();
+  if (todos) console.warn(`render: ${todos} [TODO] placeholders still on the page`);
   return sprite() + body;
 }
